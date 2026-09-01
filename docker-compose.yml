@@ -1,0 +1,29 @@
+services:
+  verdaccio:
+    image: verdaccio/verdaccio:6
+    container_name: verdaccio
+    restart: unless-stopped
+    environment:
+      - VERDACCIO_PORT=4873
+      - VERDACCIO_PUBLIC_URL=https://npm.pipedocs.app
+    volumes:
+      - verdaccio_storage:/verdaccio/storage
+      - ./config:/verdaccio/conf
+      - verdaccio_plugins:/verdaccio/plugins
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.verdaccio.rule=Host(`npm.pipedocs.app`)"
+      - "traefik.http.routers.verdaccio.entrypoints=websecure"
+      - "traefik.http.routers.verdaccio.tls=true"
+      - "traefik.http.routers.verdaccio.service=verdaccio"
+      - "traefik.http.services.verdaccio.loadbalancer.server.port=4873"
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  verdaccio_storage:
+  verdaccio_plugins:

@@ -1,0 +1,44 @@
+#
+# Verdaccio config — npm.pipedocs.app
+# Docs: https://verdaccio.org/docs/configuration
+#
+
+storage: /verdaccio/storage
+
+web:
+  title: PipeDocs NPM Registry
+
+auth:
+  htpasswd:
+    file: /verdaccio/conf/htpasswd
+    max_users: 1000
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+
+packages:
+  '@*/*':
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+  '**':
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+server:
+  keepAliveTimeout: 60
+  trustProxy: true
+
+middlewares:
+  audit:
+    enabled: true
+
+log:
+  type: stdout
+  format: pretty
+  level: http
