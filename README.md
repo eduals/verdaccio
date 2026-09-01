@@ -6,15 +6,13 @@ Repositório para gerenciar a configuração do registry NPM privado (Verdaccio)
 
 Antes, o `config.yaml` ficava preso no volume Docker `verdaccio_conf`, impossível de editar pelo Portainer.
 
-O `config/config.yaml` é injetado via **Docker Config** (funciona no Portainer/Swarm, onde bind mount `./config` falha):
+O `config/config.yaml` é baixado do GitHub na inicialização do container (sem bind mount — compatível com Portainer/Swarm):
 
 ```yaml
-configs:
-  verdaccio_config:
-    file: ./config/config.yaml
+CONFIG_URL=https://raw.githubusercontent.com/eduals/verdaccio/main/config/config.yaml
 ```
 
-Usuários (`htpasswd`) ficam no volume `verdaccio_conf`. Após editar o config, faça **Pull and redeploy** da stack no Portainer.
+Edite `config/config.yaml`, faça push e **redeploy/restart** da stack para aplicar.
 
 ## Acesso público aos pacotes
 

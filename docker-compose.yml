@@ -1,7 +1,3 @@
-configs:
-  verdaccio_config:
-    file: ./config/config.yaml
-
 services:
   verdaccio:
     image: verdaccio/verdaccio:6
@@ -10,9 +6,7 @@ services:
     environment:
       - VERDACCIO_PORT=4873
       - VERDACCIO_PUBLIC_URL=https://npm.pipedocs.app
-    configs:
-      - source: verdaccio_config
-        target: /seed/config.yaml
+      - CONFIG_URL=https://raw.githubusercontent.com/eduals/verdaccio/main/config/config.yaml
     volumes:
       - verdaccio_storage:/verdaccio/storage
       - verdaccio_conf:/verdaccio/conf
@@ -20,7 +14,7 @@ services:
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        cp /seed/config.yaml /verdaccio/conf/config.yaml
+        wget -qO /verdaccio/conf/config.yaml "$CONFIG_URL" || exit 1
         touch /verdaccio/conf/htpasswd
         exec /usr/local/bin/verdaccio --config /verdaccio/conf/config.yaml
     networks:
