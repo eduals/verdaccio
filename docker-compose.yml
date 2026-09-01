@@ -2,7 +2,7 @@
 services:
   verdaccio:
     build: .
-    image: pipedocs/verdaccio:6
+    pull_policy: build
     container_name: verdaccio
     restart: unless-stopped
     environment:

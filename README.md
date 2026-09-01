@@ -23,8 +23,10 @@ Todos os pacotes com leitura e publicação abertas (`access/publish/unpublish: 
 1. **Stacks → Add stack → Repository**
 2. URL: `https://github.com/eduals/verdaccio`
 3. Compose path: `docker-compose.yml`
-4. Ative **Build the image** (obrigatório — a imagem inclui o config)
+4. Ative **Build method → Repository** (builda a imagem localmente — não tenta pull do Docker Hub)
 5. Deploy / Pull and redeploy
+
+> Se der erro de pull em `pipedocs/verdaccio`, é porque o Portainer tentou baixar uma imagem que só existe após o build. Use **Pull and redeploy** com build habilitado.
 
 A cada alteração em `config/config.yaml`: commit, push e **Pull and redeploy** (rebuild da imagem).
 
