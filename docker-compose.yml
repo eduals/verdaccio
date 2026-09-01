@@ -1,3 +1,7 @@
+configs:
+  verdaccio_config:
+    file: ./config/config.yaml
+
 services:
   verdaccio:
     image: verdaccio/verdaccio:6
@@ -6,14 +10,24 @@ services:
     environment:
       - VERDACCIO_PORT=4873
       - VERDACCIO_PUBLIC_URL=https://npm.pipedocs.app
+    configs:
+      - source: verdaccio_config
+        target: /seed/config.yaml
     volumes:
       - verdaccio_storage:/verdaccio/storage
-      - ./config:/verdaccio/conf
+      - verdaccio_conf:/verdaccio/conf
       - verdaccio_plugins:/verdaccio/plugins
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cp /seed/config.yaml /verdaccio/conf/config.yaml
+        touch /verdaccio/conf/htpasswd
+        exec /usr/local/bin/verdaccio --config /verdaccio/conf/config.yaml
     networks:
       - proxy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
       - "traefik.http.routers.verdaccio.rule=Host(`npm.pipedocs.app`)"
       - "traefik.http.routers.verdaccio.entrypoints=websecure"
       - "traefik.http.routers.verdaccio.tls=true"
@@ -26,4 +40,5 @@ networks:
 
 volumes:
   verdaccio_storage:
+  verdaccio_conf:
   verdaccio_plugins:
