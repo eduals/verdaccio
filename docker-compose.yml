@@ -1,22 +1,16 @@
+# https://verdaccio.org/docs/docker#using-docker-compose
 services:
   verdaccio:
-    image: verdaccio/verdaccio:6
+    build: .
+    image: pipedocs/verdaccio:6
     container_name: verdaccio
     restart: unless-stopped
     environment:
       - VERDACCIO_PORT=4873
       - VERDACCIO_PUBLIC_URL=https://npm.pipedocs.app
-      - CONFIG_URL=https://raw.githubusercontent.com/eduals/verdaccio/main/config/config.yaml
     volumes:
       - verdaccio_storage:/verdaccio/storage
-      - verdaccio_conf:/verdaccio/conf
       - verdaccio_plugins:/verdaccio/plugins
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        wget -qO /verdaccio/conf/config.yaml "$CONFIG_URL" || exit 1
-        touch /verdaccio/conf/htpasswd
-        exec /usr/local/bin/verdaccio --config /verdaccio/conf/config.yaml
     networks:
       - proxy
     labels:
@@ -34,5 +28,4 @@ networks:
 
 volumes:
   verdaccio_storage:
-  verdaccio_conf:
   verdaccio_plugins:

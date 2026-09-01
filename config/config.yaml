@@ -1,16 +1,18 @@
 #
-# Verdaccio config — npm.pipedocs.app
-# Docs: https://verdaccio.org/docs/configuration
+# Baseado em docker.yaml oficial do Verdaccio
+# https://github.com/verdaccio/verdaccio/blob/master/packages/config/src/conf/docker.yaml
 #
 
-storage: /verdaccio/storage
+storage: /verdaccio/storage/data
+
+plugins: /verdaccio/plugins
 
 web:
   title: PipeDocs NPM Registry
 
 auth:
   htpasswd:
-    file: /verdaccio/conf/htpasswd
+    file: /verdaccio/storage/htpasswd
     max_users: 1000
 
 uplinks:

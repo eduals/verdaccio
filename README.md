@@ -1,78 +1,43 @@
 # Verdaccio — npm.pipedocs.app
 
-Repositório para gerenciar a configuração do registry NPM privado (Verdaccio) usado em produção.
+Registry NPM privado com config versionado no Git, seguindo a [documentação oficial do Verdaccio](https://verdaccio.org/docs/docker).
 
-## O que mudou em relação ao setup anterior
+## Como funciona
 
-Antes, o `config.yaml` ficava preso no volume Docker `verdaccio_conf`, impossível de editar pelo Portainer.
+O `config/config.yaml` é copiado para dentro da imagem no build (`Dockerfile`).  
+Não usamos bind mount de config — isso **não funciona** em stacks Swarm do Portainer.
 
-O `config/config.yaml` é baixado do GitHub na inicialização do container (sem bind mount — compatível com Portainer/Swarm):
+Volumes nomeados (recomendado pela doc oficial):
 
-```yaml
-CONFIG_URL=https://raw.githubusercontent.com/eduals/verdaccio/main/config/config.yaml
-```
+| Volume              | Uso                                      |
+|---------------------|------------------------------------------|
+| `verdaccio_storage` | Pacotes publicados + `htpasswd`          |
+| `verdaccio_plugins` | Plugins opcionais                        |
 
-Edite `config/config.yaml`, faça push e **redeploy/restart** da stack para aplicar.
+## Acesso público
 
-## Acesso público aos pacotes
-
-No `config/config.yaml`, a seção `packages` está configurada com:
-
-| Permissão   | Valor            | Efeito                                      |
-|-------------|------------------|---------------------------------------------|
-| `access`    | `$all`           | Qualquer pessoa pode **baixar** pacotes     |
-| `publish`   | `$authenticated` | Só usuários logados podem **publicar**      |
-| `unpublish` | `$authenticated` | Só usuários logados podem **despublicar**   |
-
-Para permitir publicação sem login (não recomendado em produção), troque `publish` e `unpublish` para `$all`:
-
-```yaml
-packages:
-  '**':
-    access: $all
-    publish: $all
-    unpublish: $all
-    proxy: npmjs
-```
+Todos os pacotes com leitura e publicação abertas (`access/publish/unpublish: $all`).
 
 ## Deploy no Portainer
 
-### Opção A — Stack via Git (recomendado)
+1. **Stacks → Add stack → Repository**
+2. URL: `https://github.com/eduals/verdaccio`
+3. Compose path: `docker-compose.yml`
+4. Ative **Build the image** (obrigatório — a imagem inclui o config)
+5. Deploy / Pull and redeploy
 
-1. Faça push deste repo para o GitHub.
-2. No Portainer: **Stacks → Add stack → Repository**.
-3. Cole a URL do repositório e aponte para `docker-compose.yml`.
-4. Ative **Automatic updates** se quiser redeploy automático ao push.
+A cada alteração em `config/config.yaml`: commit, push e **Pull and redeploy** (rebuild da imagem).
 
-### Opção B — Clone no servidor
+## Migrar usuários do volume antigo
 
-```bash
-git clone https://github.com/eduals/verdaccio.git
-cd verdaccio
-docker compose up -d
-```
-
-## Migrar do volume antigo
-
-Se você já tinha pacotes e usuários no volume `verdaccio_conf`:
+Se tinha `htpasswd` no volume `verdaccio_conf`:
 
 ```bash
-# Copiar htpasswd com usuários existentes
-docker run --rm -v verdaccio_conf:/from alpine sh -c "cat /from/htpasswd" > config/htpasswd
-
-# Se quiser preservar o config antigo para comparar
-docker run --rm -v verdaccio_conf:/from alpine sh -c "cat /from/config.yaml" > config/config.yaml.bak
+docker run --rm -v verdaccio_conf:/from -v verdaccio_storage:/to alpine \
+  sh -c "cp /from/htpasswd /to/htpasswd 2>/dev/null || true"
 ```
 
-O volume `verdaccio_storage` continua igual — seus pacotes publicados não são perdidos.
-
-## Criar usuário para publicar
-
-```bash
-docker exec -it verdaccio npm adduser --registry https://npm.pipedocs.app
-```
-
-Ou acesse https://npm.pipedocs.app e registre-se pela UI.
+Pacotes no `verdaccio_storage` são preservados automaticamente.
 
 ## Usar o registry
 
@@ -81,19 +46,14 @@ npm login --registry=https://npm.pipedocs.app
 npm publish --registry=https://npm.pipedocs.app
 ```
 
-Para um projeto específico, crie um `.npmrc`:
+`.npmrc` no projeto:
 
 ```
 registry=https://npm.pipedocs.app/
-//npm.pipedocs.app/:_authToken=${NPM_TOKEN}
 ```
 
-## Aplicar mudanças no config
+## Referências
 
-1. Edite `config/config.yaml` neste repositório.
-2. Commit e push.
-3. No Portainer, redeploy a stack ou reinicie o container:
-
-```bash
-docker compose restart verdaccio
-```
+- [Verdaccio Docker docs](https://verdaccio.org/docs/docker)
+- [docker.yaml oficial](https://github.com/verdaccio/verdaccio/blob/master/packages/config/src/conf/docker.yaml)
+- [Variáveis de ambiente](https://verdaccio.org/docs/env)
